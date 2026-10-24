@@ -1,0 +1,234 @@
+filename = nil
+loaded = false
+loading = false
+lastError = nil
+local successfulLoad = nil
+local loadedDatPath = nil
+local indexedSpritesBaseline = nil
+
+function setFileName(name)
+  filename = name
+end
+
+function isLoaded()
+  return loaded
+end
+
+function isLoading()
+  return loading
+end
+
+function getLoadError()
+  return lastError
+end
+
+function getLoadedDatPath()
+  return loadedDatPath
+end
+
+function getMissing860Message()
+  return tr('Please place the Tibia 8.60 asset files in data/things/860 (Tibia.dat and Tibia.spr).')
+end
+
+local function getVersionFromPath(datPath)
+  local version = tostring(datPath):match('[\\/]things[\\/](%d+)[\\/]')
+  return tonumber(version)
+end
+
+local function hasModernAssetFeatures(datPath)
+  local otfiPath = datPath .. '.otfi'
+  if not g_resources.fileExists(otfiPath) then
+    return false
+  end
+
+  local otfi = g_resources.readFileContents(otfiPath)
+  if not otfi then
+    return false
+  end
+
+  return otfi:find('frame%-groups:%s*true') ~= nil or otfi:find('sprite%-data%-size:%s*4096') ~= nil
+end
+
+local function enableModernAssetFeatures()
+  g_game.enableFeature(GameSpritesU32)
+  g_game.enableFeature(GameIdleAnimations)
+  g_game.enableFeature(GameEnhancedAnimations)
+end
+
+local function getResourceGeneration()
+  if g_resources.getGeneration then
+    return g_resources.getGeneration()
+  end
+  return 0
+end
+
+local function isSameLoad(left, right)
+  return left and
+    left.assetVersion == right.assetVersion and
+    left.datPath == right.datPath and
+    left.sprPath == right.sprPath and
+    left.modernAssets == right.modernAssets and
+    left.indexedAssets == right.indexedAssets and
+    left.resourceGeneration == right.resourceGeneration and
+    -- A loaded U32 asset remains valid after a feature-table reset and can
+    -- restore its required flag. A loaded U16 asset must never be reused when
+    -- the refreshed feature table now requires U32.
+    (left.spritesU32 or not right.spritesU32)
+end
+
+local function isNativeStateValid()
+  return g_things.isDatLoaded() and g_sprites.isLoaded()
+end
+
+local function invalidateAssetCache()
+  -- DAT and SPR are one logical asset set. Never retain an identity for a
+  -- partial or failed attempt, even if one native manager reports loaded.
+  successfulLoad = nil
+  loaded = false
+  loadedDatPath = nil
+end
+
+function load()
+  if loading then
+    return
+  end
+
+  loading = true
+  lastError = nil
+  local version = g_game.getClientVersion()
+  local things = g_settings.getNode('things')
+  
+  local datPath, sprPath
+  if things and things["data"] ~= nil and things["sprites"] ~= nil then
+    datPath = resolvepath('/things/' .. things["data"])
+    sprPath = resolvepath('/things/' .. things["sprites"])
+  else
+    if filename then
+      datPath = resolvepath('/things/' .. filename)
+      sprPath = resolvepath('/things/' .. filename)
+    else
+      -- Force loading the 8.60 asset pack used by this server.
+      datPath = resolvepath('/things/860/Tibia')
+      sprPath = resolvepath('/things/860/Tibia')
+    end
+  end
+
+  local protocolVersion = g_game.getProtocolVersion()
+  local assetVersion = getVersionFromPath(datPath) or version
+  local modernAssets = hasModernAssetFeatures(datPath)
+  local indexedAssets = g_sprites.isIndexedSource and g_sprites.isIndexedSource(sprPath) or false
+
+  -- Only undo a flag that this module enabled for an indexed pack. Never
+  -- disable a version-configured U32 flag or a modern pack's required mode.
+  if indexedSpritesBaseline and not indexedAssets then
+    if indexedSpritesBaseline.version == version and not modernAssets then
+      g_game.disableFeature(GameSpritesU32)
+    end
+    indexedSpritesBaseline = nil
+  end
+  local requestedLoad = {
+    assetVersion = assetVersion,
+    datPath = datPath,
+    sprPath = sprPath,
+    modernAssets = modernAssets,
+    indexedAssets = indexedAssets,
+    resourceGeneration = getResourceGeneration(),
+    spritesU32 = g_game.getFeature(GameSpritesU32)
+  }
+
+  if isSameLoad(successfulLoad, requestedLoad) and isNativeStateValid() then
+    if successfulLoad.spritesU32 then
+      if indexedAssets and not g_game.getFeature(GameSpritesU32) then
+        indexedSpritesBaseline = { version = version }
+      end
+      g_game.enableFeature(GameSpritesU32)
+    end
+    if modernAssets then
+      enableModernAssetFeatures()
+    end
+    loaded = true
+    loading = false
+    return
+  end
+
+  -- From this point native state may be replaced, so an older identity can no
+  -- longer be trusted even if this attempt later fails.
+  invalidateAssetCache()
+
+  if assetVersion ~= version then
+    g_logger.info(string.format("Loading assets from %s as client version %d while keeping protocol %d.", datPath, assetVersion, protocolVersion))
+    g_game.setClientVersion(assetVersion)
+  end
+
+  if modernAssets then
+    enableModernAssetFeatures()
+  end
+
+  local errorMessage = ''
+  local spritesU32 = g_game.getFeature(GameSpritesU32)
+  if indexedAssets and not spritesU32 then
+    indexedSpritesBaseline = { version = version }
+    g_game.enableFeature(GameSpritesU32)
+    spritesU32 = true
+  end
+
+  if not g_things.loadDat(datPath) then
+    if not g_game.getFeature(GameSpritesU32) then
+      g_game.enableFeature(GameSpritesU32)
+      spritesU32 = true
+      if not g_things.loadDat(datPath) then
+        errorMessage = errorMessage .. tr("Unable to load dat file, please place a valid dat in '%s'", datPath) .. '\n'
+      end
+    else
+      errorMessage = errorMessage .. tr("Unable to load dat file, please place a valid dat in '%s'", datPath) .. '\n'
+    end
+  end
+  if not g_sprites.loadSpr(sprPath) then
+    errorMessage = errorMessage .. tr("Unable to load spr file, please place a valid spr in '%s'", sprPath)
+  end
+
+  local otmlPath = datPath .. '.otml'
+  if errorMessage:len() == 0 and g_resources.fileExists(otmlPath) then
+    g_things.loadOtml(otmlPath)
+  end
+
+  if assetVersion ~= version then
+    g_game.setClientVersion(version)
+    g_game.setProtocolVersion(protocolVersion)
+    -- setClientVersion reapplies the protocol profile. Any U32 flag enabled
+    -- for the temporary asset version no longer owns that restored flag.
+    indexedSpritesBaseline = nil
+  end
+
+  if errorMessage:len() == 0 then
+    loaded = true
+    requestedLoad.spritesU32 = spritesU32
+    successfulLoad = requestedLoad
+    loadedDatPath = g_resources.guessFilePath(datPath, 'dat')
+    if spritesU32 then
+      if indexedAssets and not g_game.getFeature(GameSpritesU32) then
+        indexedSpritesBaseline = { version = version }
+      end
+      g_game.enableFeature(GameSpritesU32)
+    end
+    if modernAssets then
+      enableModernAssetFeatures()
+    end
+  else
+    invalidateAssetCache()
+    if indexedSpritesBaseline then
+      g_game.disableFeature(GameSpritesU32)
+      indexedSpritesBaseline = nil
+    end
+  end
+  loading = false
+
+  if errorMessage:len() > 0 then
+    local loadError = errorMessage:gsub('%s+$', '')
+    lastError = loadError .. '\n\n' .. getMissing860Message()
+    g_logger.error(loadError)
+
+    g_game.setClientVersion(0)
+    g_game.setProtocolVersion(0)
+  end
+end

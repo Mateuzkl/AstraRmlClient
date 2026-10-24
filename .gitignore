@@ -1,0 +1,42 @@
+# Local backups and player state
+.codex-backups/
+config.otml
+*.log
+*.otcm
+tracker_map.txt
+tracker_map.otcm
+*.dmp
+*.crash
+
+# Generated dependencies and Visual Studio output
+.vs/
+**/.vs/
+.cache/
+build/
+build-*/
+vcpkg_installed/
+vc23/otclient/
+vc23/x64/
+vc23/Debug/
+vc23/Release/
+vc23/DirectX/
+vc23/OpenGL/
+vc23/*.local.props
+*.user
+*.suo
+*.obj
+*.pdb
+*.ilk
+*.ipch
+*.idb
+*.tlog
+*.lastbuildstate
+*.VC.db
+*.VC.opendb
+
+# Credentials and machine-local configuration
+.env
+.env.*
+*.pfx
+*.p12
+*.ppk

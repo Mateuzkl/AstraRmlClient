@@ -1,0 +1,18 @@
+Module
+  name: server_run
+  description: Server protocol extended
+  author: Andre Ricca da Costa
+  website: http://dbobrasil.com.br
+
+  autoload: true
+  autoload-priority: 1000
+
+  dependencies:
+    -client_entergame
+
+  @onLoad: |
+    dofile 'server_run'
+    ServerRun.init()
+    
+  @onUnload: |
+    ServerRun.terminate()

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildThisFileDirectory)Effekseer.local.props" Condition="'$(AstraEffekseerIgnoreLocal)'!='true' and Exists('$(MSBuildThisFileDirectory)Effekseer.local.props')" />
+  <PropertyGroup>
+    <AstraEffekseerEnabled Condition="'$(AstraEffekseerEnabled)'==''">false</AstraEffekseerEnabled>
+    <AstraEffekseerSupported Condition="'$(AstraEffekseerEnabled)'=='true' and ('$(Configuration)'=='OpenGL' or '$(Configuration)'=='DirectX') and '$(Platform)'=='x64'">true</AstraEffekseerSupported>
+    <AstraEffekseerBackend>OpenGL</AstraEffekseerBackend>
+    <AstraEffekseerBackend Condition="'$(Configuration)'=='DirectX'">ANGLE</AstraEffekseerBackend>
+    <AstraEffekseerBackendDefines Condition="'$(Configuration)'=='DirectX'">__EFFEKSEER_RENDERER_GLES3__;</AstraEffekseerBackendDefines>
+    <AstraEffekseerNativeLibraries Condition="'$(Configuration)'=='OpenGL'">opengl32.lib;glu32.lib;</AstraEffekseerNativeLibraries>
+    <AstraEffekseerBuildDir Condition="'$(AstraEffekseerBuildDir)'==''">$([System.IO.Path]::GetFullPath($([System.IO.Path]::Combine('$(MSBuildProjectDirectory)', '$(IntDir)effekseer'))))</AstraEffekseerBuildDir>
+    <AstraEffekseerInstallDir Condition="'$(AstraEffekseerInstallDir)'==''">$(AstraEffekseerBuildDir)\install</AstraEffekseerInstallDir>
+    <AstraEffekseerSourceArg Condition="'$(AstraEffekseerSourceDir)'!=''">-DFETCHCONTENT_SOURCE_DIR_EFFEKSEER=&quot;$(AstraEffekseerSourceDir)&quot;</AstraEffekseerSourceArg>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(AstraEffekseerSupported)'=='true'">
+    <ClCompile>
+      <PreprocessorDefinitions>FW_EFFEKSEER;$(AstraEffekseerBackendDefines)%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(AstraEffekseerInstallDir)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>$(AstraEffekseerInstallDir)\lib\EffekseerRendererGL.lib;$(AstraEffekseerInstallDir)\lib\EffekseerRendererCommon.lib;$(AstraEffekseerInstallDir)\lib\Effekseer.lib;$(AstraEffekseerNativeLibraries)%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup Condition="'$(AstraEffekseerSupported)'=='true'">
+    <ClCompile Include="..\src\client\effekseersystem.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader><IncludeInUnityFile>false</IncludeInUnityFile>
+      <ObjectFileName>$(IntDir)effekseer_obj\effekseersystem.obj</ObjectFileName>
+    </ClCompile>
+  </ItemGroup>
+  <Target Name="AstraBuildEffekseer" BeforeTargets="ClCompile" DependsOnTargets="VcpkgInstallManifestDependencies;AstraResolveRmlUiDependencies" Condition="'$(AstraEffekseerSupported)'=='true' and '$(DesignTimeBuild)'!='true'">
+    <Exec Command="&quot;$(AstraCMake)&quot; -S &quot;$(MSBuildThisFileDirectory)..\cmake\effekseer&quot; -B &quot;$(AstraEffekseerBuildDir)&quot; -G &quot;$(AstraCMakeGenerator)&quot; -A x64 $(AstraEffekseerSourceArg) -DASTRA_EFFEKSEER_BACKEND=$(AstraEffekseerBackend) -DASTRA_EFFEKSEER_ANGLE_INCLUDE_DIR=&quot;$(AstraRmlUiVcpkgInstalledDir)$(VcpkgTriplet)\include&quot; -DCMAKE_INSTALL_PREFIX=&quot;$(AstraEffekseerInstallDir)&quot;" />
+    <Exec Command="&quot;$(AstraCMake)&quot; --build &quot;$(AstraEffekseerBuildDir)&quot; --config Release --target install --parallel 2" />
+  </Target>
+  <Target Name="AstraEffekseerFallback" BeforeTargets="ClCompile" Condition="'$(AstraEffekseerEnabled)'=='true' and '$(AstraEffekseerSupported)'!='true'">
+    <Message Importance="high" Text="Effekseer experimental: unsupported configuration; keeping vanilla rendering (Windows OpenGL/DirectX x64 only)." />
+  </Target>
+</Project>
