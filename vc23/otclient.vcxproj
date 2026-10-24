@@ -459,9 +459,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\src\client\animatedtext.cpp" />
-    <ClCompile Include="..\src\client\attachableobject.cpp" />
-    <ClCompile Include="..\src\client\attachedeffect.cpp" />
-    <ClCompile Include="..\src\client\attachedeffectmanager.cpp" />
     <ClCompile Include="..\src\client\animator.cpp" />
     <ClCompile Include="..\src\client\client.cpp" />
     <ClCompile Include="..\src\client\container.cpp" />
@@ -637,9 +634,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\client\animatedtext.h" />
-    <ClInclude Include="..\src\client\attachableobject.h" />
-    <ClInclude Include="..\src\client\attachedeffect.h" />
-    <ClInclude Include="..\src\client\attachedeffectmanager.h" />
     <ClInclude Include="..\src\client\animator.h" />
     <ClInclude Include="..\src\client\client.h" />
     <ClInclude Include="..\src\client\const.h" />
@@ -854,7 +848,6 @@
     </Link>
   </ItemDefinitionGroup>
   <Import Project="RmlUi.targets" />
-  <Import Project="Effekseer.targets" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <Target Name="CopyNativeSplash" AfterTargets="Build" Condition="Exists('$(ProjectDir)..\data\images\splash.png')">
     <MakeDir Directories="$(TargetDir)data\images" />

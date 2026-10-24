@@ -2,6 +2,42 @@
 local topMenu
 local fpsUpdateEvent = nil
 local statusUpdateEvent = nil
+local toolbarIcons = {
+  skillsButton='skills', battleButton='battle', vipListButton='viplist',
+  spelllistButton='spelllist', inventoryButton='inventory',
+  cooldownButton='cooldowns', hotkeysButton='hotkeys', shopButton='shop',
+  questLogButton='questlog', unjustifiedPointsButton='unjustifiedpoints',
+  botButton='bot', preyButton='preyDialog', preyTrackerButton='preyWidget'
+}
+local toolbarImageInfo = {}
+
+local function setToolbarImageInfo(button, path)
+  local info = toolbarImageInfo[path]
+  if not info then
+    local file = path:match('%.png$') and path or path .. '.png'
+    local width, height = 20, 40
+    if g_resources.fileExists(file) then
+      local data = g_resources.readFileContents(file)
+      if #data >= 24 and data:sub(1,8) == '\137PNG\r\n\26\n' then
+        local function u32(offset)
+          local a,b,c,d = data:byte(offset,offset+3)
+          return ((a*256+b)*256+c)*256+d
+        end
+        width, height = u32(17), u32(21)
+      end
+    end
+    info = {width=width,height=height}
+    toolbarImageInfo[path] = info
+  end
+  local sprite = info.width == 20 and info.height == 40
+  button.astraToolbarStyle = sprite and 'GameToolbarSpriteButton' or 'GameToolbarStaticButton'
+  if not sprite then
+    local scale = math.min(1,20/info.width,20/info.height)
+    local width, height = math.floor(info.width*scale), math.floor(info.height*scale)
+    button.astraToolbarIconRect = {x=math.floor((24-width)/2),y=math.floor((24-height)/2),width=width,height=height}
+    button.astraToolbarIconClip = {x=0,y=0,width=info.width,height=info.height}
+  end
+end
 
 -- private functions
 local function addButton(id, description, icon, callback, panel, toggle, front, index)
@@ -27,7 +63,10 @@ local function addButton(id, description, icon, callback, panel, toggle, front, 
   end
   button:setId(id)
   button:setTooltip(description)
-  button:setIcon(resolvepath(icon, 3))
+  local toolbarIcon = toolbarIcons[id]
+  local iconPath = toolbarIcon and '/modules/game_buttons/images/' .. toolbarIcon or resolvepath(icon, 3)
+  button:setIcon(iconPath)
+  setToolbarImageInfo(button,iconPath)
   button.onMouseRelease = function(widget, mousePos, mouseButton)
     if widget:containsPoint(mousePos) and mouseButton ~= MouseMidButton and mouseButton ~= MouseTouch then
       callback()
@@ -43,6 +82,7 @@ end
 
 -- public functions
 function init()
+  g_ui.importStyle('/modules/client_topmenu/toolbar.otui')
   connect(g_game, { onGameStart = online,
                     onGameEnd = offline,
                     onPingBack = updatePing })

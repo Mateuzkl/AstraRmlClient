@@ -36,7 +36,6 @@
 #include "spritemanager.h"
 #include "minimap.h"
 #include "healthbars.h"
-#include "attachedeffectmanager.h"
 #include <framework/core/configmanager.h>
 
 Client g_client;
@@ -66,7 +65,6 @@ void Client::terminate()
     g_creatures.terminate();
     g_game.terminate();
     g_map.terminate();
-    g_attachedEffects.clear();
     g_minimap.terminate();
     g_things.terminate();
     g_sprites.terminate();

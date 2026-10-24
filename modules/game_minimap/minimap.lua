@@ -121,7 +121,7 @@ function loadMap()
     loaded = g_minimap.loadOtmm(minimapFile)
   end
 
-  -- Permite salvar mesmo sem arquivo prÈvio para que a exploraÁ„o n„o se perca
+  -- Permite salvar mesmo sem arquivo pr√©vio para que a explora√ß√£o n√£o se perca
   if not loaded then
     loaded = true
     print("Minimap: no saved file found, starting fresh (exploration will be saved on logout)")
@@ -137,7 +137,7 @@ function saveMap()
   local clientVersion = g_game.getClientVersion()
   local minimapFile = '/minimap' .. clientVersion .. '.otmm'
   -- Remove o arquivo antigo antes de salvar para evitar erro de rename no Windows
-  -- quando o arquivo est· sendo usado por outro processo (ex: antivÌrus)
+  -- quando o arquivo est√° sendo usado por outro processo (ex: antiv√≠rus)
   if g_resources.fileExists(minimapFile) then
     g_resources.deleteFile(minimapFile)
   end

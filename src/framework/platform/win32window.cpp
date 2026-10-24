@@ -435,7 +435,7 @@ void WIN32Window::internalCreateGLContext()
         m_eglContext = context;
         return true;
     };
-#if defined(FW_RMLUI) || defined(FW_EFFEKSEER)
+#ifdef FW_RMLUI
     constexpr bool preferEs3 = true;
 #else
     constexpr bool preferEs3 = false;
@@ -444,7 +444,7 @@ void WIN32Window::internalCreateGLContext()
     if (!requestedVersion)
         g_logger.fatal(stdext::format("Unable to create EGL ES2/ES3 context: %i", eglGetError()));
     if (preferEs3 && requestedVersion == 2)
-        g_logger.warning("[EGL] ES3 unavailable; using the OTUI ES2 fallback (RmlUi/Effekseer require ES3).");
+        g_logger.warning("[EGL] ES3 unavailable; using the OTUI ES2 fallback (RmlUi requires ES3).");
     EGLint clientVersion = 0;
     eglQueryContext(m_eglDisplay, m_eglContext, EGL_CONTEXT_CLIENT_VERSION, &clientVersion);
     g_logger.info(stdext::format("[EGL] requested=%s; display=%s; requested ES=%d; context client=%d",

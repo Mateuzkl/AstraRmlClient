@@ -21,9 +21,6 @@
  */
 
 #include "game.h"
-#ifdef FW_EFFEKSEER
-#include "effekseersystem.h"
-#endif
 #include "localplayer.h"
 #include "weathermanager.h"
 #include "map.h"
@@ -304,9 +301,6 @@ void Game::processGameStart()
 
 void Game::processGameEnd()
 {
-#ifdef FW_EFFEKSEER
-    g_effekseer.clearAll();
-#endif
     m_online = false;
     g_lua.callGlobalField("g_game", "onGameEnd");
 

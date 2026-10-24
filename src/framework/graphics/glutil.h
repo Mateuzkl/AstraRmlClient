@@ -37,7 +37,7 @@
 #define GL_APICALL
 #define EGLAPI
 
-#if defined(FW_RMLUI) || defined(FW_EFFEKSEER)
+#ifdef FW_RMLUI
 #include <GLES3/gl3.h>
 #else
 #include <GLES2/gl2.h>

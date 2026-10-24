@@ -23,7 +23,6 @@
 #include "protocolgame.h"
 #include "spellcooldown.h"
 #include "customitemprotocol.h"
-#include "attachedeffectmanager.h"
 
 #include <algorithm>
 #include <ctime>
@@ -718,12 +717,6 @@ void ProtocolGame::parseMessage(const InputMessagePtr& msg)
                 // otclient ONLY
             case Proto::GameServerExtendedOpcode:
                 parseExtendedOpcode(msg);
-                break;
-            case Proto::GameServerAttachedEffect:
-                parseAttachedEffect(msg);
-                break;
-            case Proto::GameServerDetachEffect:
-                parseDetachEffect(msg);
                 break;
             case Proto::GameServerChangeMapAwareRange:
                 parseChangeMapAwareRange(msg);
@@ -4510,25 +4503,6 @@ void ProtocolGame::parseExtendedOpcode(const InputMessagePtr& msg)
         m_enableSendExtendedOpcode = true;
     else
         callLuaField("onExtendedOpcode", opcode, buffer);
-}
-
-void ProtocolGame::parseAttachedEffect(const InputMessagePtr& msg)
-{
-    // Read the entire payload before any lookup, even for unknown creatures/IDs.
-    const uint32_t creatureId = msg->getU32();
-    const uint16_t effectId = msg->getU16();
-    if (const auto creature = g_map.getCreatureById(creatureId)) {
-        if (const auto effect = g_attachedEffects.getById(effectId))
-            creature->attachEffect(effect);
-    }
-}
-
-void ProtocolGame::parseDetachEffect(const InputMessagePtr& msg)
-{
-    const uint32_t creatureId = msg->getU32();
-    const uint16_t effectId = msg->getU16();
-    if (const auto creature = g_map.getCreatureById(creatureId))
-        creature->detachEffectById(effectId);
 }
 
 void ProtocolGame::parseChangeMapAwareRange(const InputMessagePtr& msg)

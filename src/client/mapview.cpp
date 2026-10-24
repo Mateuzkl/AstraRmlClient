@@ -34,9 +34,6 @@
 #include "gameconfig.h"
 #include "negativeoffset.h"
 #include "spritemanager.h"
-#ifdef FW_EFFEKSEER
-#include "effekseersystem.h"
-#endif
 
 #include <framework/graphics/graphics.h>
 #include <framework/graphics/image.h>
@@ -55,10 +52,6 @@
 
 MapView::MapView()
 {
-#ifdef FW_EFFEKSEER
-    static std::atomic<uint64_t> nextView=0;
-    m_effekseerViewId=++nextView;
-#endif
     m_fadingFloorTimers.resize(g_gameConfig.getMapMaxZ() + 1);
     m_cachedVisibleTiles.resize(g_gameConfig.getMapMaxZ() + 1);
     m_lockedFirstVisibleFloor = -1;
@@ -72,9 +65,6 @@ MapView::MapView()
 
 MapView::~MapView()
 {
-#ifdef FW_EFFEKSEER
-    g_effekseer.releaseMapView(m_effekseerViewId);
-#endif
     VALIDATE(!g_app.isTerminated());
 }
 
@@ -86,8 +76,6 @@ void MapView::drawTileTexts(const Rect& rect, const Rect& srcRect)
     float verticalStretchFactor = rect.height() / (float)srcRect.height();
 
     auto player = g_game.getLocalPlayer();
-    if (!player)
-        return; // Independent/offline map views have no logged-in character.
     auto floor = player->getPosition().z;
     for (auto& tile : m_cachedVisibleTiles[floor]) {
         Position tilePos = tile->getPosition();
@@ -109,8 +97,6 @@ void MapView::drawTileWidget(const Rect& rect, const Rect& srcRect)
     float verticalStretchFactor = rect.height() / (float)srcRect.height();
 
     auto player = g_game.getLocalPlayer();
-    if (!player)
-        return;
     auto floor = player->getPosition().z;
     for (auto& tile : m_cachedVisibleTiles[floor]) {
         Position tilePos = tile->getPosition();
@@ -174,9 +160,6 @@ void MapView::drawMapBackground(const Rect& rect, const TilePtr& crosshairTile) 
             g_drawQueue->setOpacity(floorStart, fading);
     }
 
-#ifdef FW_EFFEKSEER
-    g_effekseer.submitMap(*this,m_effekseerViewId);
-#endif
     if(!m_shader.empty() && isFollowingCreature()) {
         g_drawQueue->setShader(m_shader);
 
@@ -198,14 +181,6 @@ void MapView::setShader(const std::string& shader)
     if (!m_shader.empty())
         m_shaderPosition = getCameraPosition();
 }
-
-#ifdef FW_EFFEKSEER
-void MapView::setEffekseerEnabled(bool enabled)
-{
-    if(enabled) g_effekseer.selectMapView(m_effekseerViewId);
-    else g_effekseer.releaseMapView(m_effekseerViewId);
-}
-#endif
 
 void MapView::drawFloor(short floor, const Position& cameraPosition, const TilePtr& crosshairTile)
 {

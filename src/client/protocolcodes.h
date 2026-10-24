@@ -69,8 +69,6 @@ namespace Proto {
 
         // otclient ONLY
         GameServerExtendedOpcode            = 50,
-        GameServerAttachedEffect            = 52, // U32 creature ID, U16 registered effect ID
-        GameServerDetachEffect              = 53, // U32 creature ID, U16 registered effect ID
         GameServerProgressBar               = 59,
         // Reserved for native ZoneId weather negotiated by GameZoneWeather.
         GameServerZoneWeather               = 60,

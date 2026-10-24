@@ -347,8 +347,6 @@ private:
     void parseItemDetail(const InputMessagePtr& msg);
     void parseHunting(const InputMessagePtr& msg);
     void parseExtendedOpcode(const InputMessagePtr& msg);
-    void parseAttachedEffect(const InputMessagePtr& msg);
-    void parseDetachEffect(const InputMessagePtr& msg);
     void parseChangeMapAwareRange(const InputMessagePtr& msg);
     void parseProgressBar(const InputMessagePtr& msg);
     void parseZoneWeather(const InputMessagePtr& msg);

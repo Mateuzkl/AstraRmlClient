@@ -47,9 +47,6 @@ public:
     void followCreature(const CreaturePtr& creature) { m_mapView->followCreature(creature); }
 
     void setCameraPosition(const Position& pos) { m_mapView->setCameraPosition(pos); }
-#ifdef FW_EFFEKSEER
-    void setEffekseerEnabled(bool enabled) { m_mapView->setEffekseerEnabled(enabled); }
-#endif
     void setMaxZoomIn(int maxZoomIn) { m_maxZoomIn = maxZoomIn; }
     void setMaxZoomOut(int maxZoomOut) { m_maxZoomOut = maxZoomOut; }
     void setMultifloor(bool enable) { m_mapView->setMultifloor(enable); }

@@ -2,6 +2,10 @@
 
 Cliente com a SRC do Astra e suporte RmlUi 6.3, adaptado ao TFS 1.8 8.60 original.
 
+A base nativa (`src/`, `cmake/` e os arquivos versionados de `vc23/`) foi sincronizada com a `main` do AstraClient no commit `689e37f6f51c651e4f42ad58eab42e7d9bd11266`. Os arquivos experimentais de Effekseer foram retirados dessa base. O executável incluído é o anterior à sincronização; recompile para gerar o binário correspondente à SRC atual.
+
+Os caches locais de RmlUi que ainda apontavam para a pasta do AstraClient original foram guardados em `.codex-backups/`. O próximo build configura o RmlUi nesta pasta; use **Rebuild Solution** para gerar um executável completo da nova base.
+
 ## Executar
 
 Use `otclient_dx_x64.exe` na raiz, junto das DLLs e pastas `data`, `modules`, `mods` e `layouts`.
@@ -41,14 +45,28 @@ O módulo usa as mensagens nativas do TFS original (`0xE8`/`0xE9` para estado/pr
 
 ## Projeto e validação
 
-O projeto Visual Studio fica em `vc23/otclient.sln`. `vcpkg.json` e os scripts `cmake/` fornecem as dependências usadas pelos targets RmlUi/Effekseer. A compilação fica a cargo do responsável pelo projeto; o executável incluído já existia na pasta.
+O projeto Visual Studio fica em `vc23/otclient.sln`. `vcpkg.json` e os scripts `cmake/` fornecem as dependências do RmlUi. A compilação fica a cargo do responsável pelo projeto; o executável incluído já existia na pasta.
 
 Para executar as verificações locais com esse executável, sem login real:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\tests\compat\Run-Compat.ps1
+powershell -ExecutionPolicy Bypass -File .\tests\compat\Run-Compat.ps1 -Suite toolbar
+powershell -ExecutionPolicy Bypass -File .\tests\compat\Run-Compat.ps1 -Suite rml
 ```
 
 O teste declara o nome do perfil antes da inicialização nativa e verifica inicialização, fontes/runtime RmlUi, DAT/SPR, HTTP, pacotes de login, features, encaminhamento das teclas, loja, estados/controles do Prey e ausência dos módulos removidos. A movimentação real e as operações do Prey devem ser validadas em jogo.
 
 Backups locais em `.codex-backups/`, logs, configurações pessoais e resultados de compilação não são versionados.
+
+## Botões e telas RmlUi
+
+Os botões em jogo usam uma grade de 24 × 24 pixels, altura automática e os ícones do Astra. Imagens estáticas mantêm o mesmo quadro ao ativar; sprites com dois quadros usam as áreas corretas de Off/On.
+
+As telas RmlUi da base original estão em `modules/client_rml*` e `modules/game_rml*`. As opções RmlUi usam o `client_options` deste cliente; a árvore de skills continua uma demonstração local, sem integração de atributos com o servidor.
+
+## Versão web
+
+O código web original está em `browser/`, acompanhado das ferramentas `tools/browser_*` e da integração no `CMakeLists.txt`. A lista explícita `browser/production-assets.json` corresponde aos assets deste cliente, incluindo Prey, bot, RmlUi e o layout retro.
+
+Use [browser/README.md](browser/README.md) para preparar a compilação e os bridges. A versão web não foi compilada nem publicada durante essa sincronização.

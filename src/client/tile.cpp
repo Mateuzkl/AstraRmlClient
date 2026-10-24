@@ -148,7 +148,6 @@ void Tile::drawBottom(const Point& dest, LightView* lightView, const bool negati
     }
 
     // common items, reverse order
-    drawAttachedEffects(dest, dest, Otc::InvalidDirection, false, lightView);
     int redrawPreviousTopW = 0, redrawPreviousTopH = 0;
     bool stopDrawing = false;
     for (auto it = m_things.rbegin(); it != m_things.rend(); ++it) {
@@ -335,7 +334,6 @@ void Tile::drawTop(const Point& dest, LightView* lightView, const bool globalLay
             continue;
         thing->draw(dest, true, lightView);
     }
-    drawAttachedEffects(dest, dest, Otc::InvalidDirection, true, lightView);
 }
 
 
@@ -449,15 +447,8 @@ bool Tile::drawToImage(const Point& dest, ImagePtr image)
     return anythingDrawn;
 }
 
-void Tile::onAttachedEffectsChanged()
-{
-    // An otherwise empty tile was omitted from the visible-tile cache.
-    g_map.notificateTileUpdate(m_position, false);
-}
-
 void Tile::clean()
 {
-    clearAttachedEffects();
     while(!m_things.empty())
         removeThing(m_things.front());
     
@@ -1052,7 +1043,7 @@ bool Tile::isEmpty()
 
 bool Tile::isDrawable()
 {
-    return !m_things.empty() || !m_walkingCreatures.empty() || !m_effects.empty() || hasAttachedEffects();
+    return !m_things.empty() || !m_walkingCreatures.empty() || !m_effects.empty();
 }
 
 bool Tile::mustHookEast()
@@ -1122,7 +1113,7 @@ bool Tile::limitsFloorsView(bool isFreeView)
 
 bool Tile::canErase()
 {
-    return !hasAttachedEffects() && m_walkingCreatures.empty() && m_effects.empty() && m_things.empty() && m_flags == 0 && m_minimapColor == 0;
+    return m_walkingCreatures.empty() && m_effects.empty() && m_things.empty() && m_flags == 0 && m_minimapColor == 0;
 }
 
 int Tile::getElevation()

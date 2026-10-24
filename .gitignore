@@ -14,6 +14,9 @@ tracker_map.otcm
 .cache/
 build/
 build-*/
+__pycache__/
+*.pyc
+*.pyo
 vcpkg_installed/
 vc23/otclient/
 vc23/x64/

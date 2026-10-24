@@ -83,13 +83,6 @@ public:
 
     void setCameraPosition(const Position& pos);
     Position getCameraPosition();
-#ifdef FW_EFFEKSEER
-    void setEffekseerEnabled(bool enabled);
-    Point projectEffekseer(const Position& position,const Position& camera) { return transformPositionTo2D(position,camera); }
-private:
-    uint64_t m_effekseerViewId=0;
-public:
-#endif
 
     void setMinimumAmbientLight(float intensity) { m_minimumAmbientLight = intensity; }
     float getMinimumAmbientLight() { return m_minimumAmbientLight; }

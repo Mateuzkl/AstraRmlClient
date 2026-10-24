@@ -1,0 +1,28 @@
+GameToolbarButton < UIButton
+  size: 24 24
+  margin: 0
+  focusable: false
+  image-source: /images/ui/button_top
+  image-clip: 0 0 26 26
+  image-border: 3
+  image-color: #ffffffff
+  icon-color: #ffffffff
+  $hover !disabled:
+    image-clip: 26 0 26 26
+
+  $pressed:
+    image-clip: 52 0 26 26
+
+  $disabled:
+    image-color: #ffffff44
+    icon-color: #ffffff44
+
+GameToolbarSpriteButton < GameToolbarButton
+  icon-rect: 2 2 20 20
+  icon-clip: 0 0 20 20
+  $on:
+    icon-clip: 0 20 20 20
+  $pressed:
+    icon-clip: 0 20 20 20
+
+GameToolbarStaticButton < GameToolbarButton

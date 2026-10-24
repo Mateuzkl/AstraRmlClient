@@ -45,9 +45,6 @@
 #include <mutex>
 #include <array>
 #include <utility>
-#ifdef FW_EFFEKSEER
-#include <client/effekseersystem.h>
-#endif
 #ifdef FW_RMLUI
 #include <framework/rml/rmlmanager.h>
 #endif
@@ -254,9 +251,6 @@ void GraphicalApplication::finishStartup()
 void GraphicalApplication::terminate()
 {
     pendingScreenshots.clear();
-#ifdef FW_EFFEKSEER
-    g_effekseer.shutdown();
-#endif
     // destroy any remaining widget
     g_ui.terminate();
 #ifdef FW_RMLUI
@@ -827,9 +821,6 @@ void GraphicalApplication::run()
         }
 
         g_painter->resetDraws();
-#ifdef FW_EFFEKSEER
-        g_effekseer.beginFrame();
-#endif
         if (m_scaling > 1.0f) {
             AutoStat s(STATS_RENDER, "SetupScaling");
             g_painter->setResolution(g_graphics.getViewportSize() / m_scaling);
@@ -962,9 +953,6 @@ void GraphicalApplication::run()
 
 void GraphicalApplication::poll() {
     ticks_t start = stdext::millis();
-#ifdef FW_EFFEKSEER
-    g_effekseer.pollResources();
-#endif
 #ifdef FW_SOUND
     g_sounds.poll();
 #endif

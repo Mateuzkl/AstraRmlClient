@@ -56,7 +56,6 @@ public:
     void setHealthBar(uint8 id) { m_healthBar = id; }
     void setManaBar(uint8 id) { m_manaBar = id; }
     void setCenter(bool value) { m_center = value; }
-    bool getCenter() const { return m_center; }
 
     void resetClothes();
     void resetShader() { m_shader = ""; }

@@ -21,11 +21,6 @@
  */
 
 #include "client.h"
-#ifdef FW_EFFEKSEER
-#include "effekseersystem.h"
-#endif
-#include "attachedeffectmanager.h"
-#include "attachableobject.h"
 #include "luavaluecasts_client.h"
 #include "game.h"
 #include "gameconfig.h"
@@ -64,34 +59,6 @@
 
 void Client::registerLuaFunctions()
 {
-#ifdef FW_EFFEKSEER
-    g_lua.registerSingletonClass("g_effekseer");
-    g_lua.bindSingletonFunction("g_effekseer","isAvailable",&EffekseerSystem::isAvailable,&g_effekseer);
-    g_lua.bindSingletonFunction("g_effekseer","isEnabled",&EffekseerSystem::isEnabled,&g_effekseer);
-    g_lua.bindSingletonFunction("g_effekseer","setEnabled",&EffekseerSystem::setEnabled,&g_effekseer);
-    g_lua.bindSingletonFunction("g_effekseer","play",&EffekseerSystem::play,&g_effekseer);
-    g_lua.bindSingletonFunction("g_effekseer","follow",&EffekseerSystem::follow,&g_effekseer);
-    g_lua.bindSingletonFunction("g_effekseer","followCreature",&EffekseerSystem::followCreature,&g_effekseer);
-    g_lua.bindSingletonFunction("g_effekseer","playPreview",&EffekseerSystem::playPreview,&g_effekseer);
-    g_lua.bindSingletonFunction("g_effekseer","shoot",&EffekseerSystem::shoot,&g_effekseer);
-    g_lua.bindSingletonFunction("g_effekseer","move",&EffekseerSystem::move,&g_effekseer);
-    g_lua.bindSingletonFunction("g_effekseer","stop",&EffekseerSystem::stop,&g_effekseer);
-    g_lua.bindSingletonFunction("g_effekseer","setScale",&EffekseerSystem::setScale,&g_effekseer);
-    g_lua.bindSingletonFunction("g_effekseer","setTilt",&EffekseerSystem::setTilt,&g_effekseer);
-    g_lua.bindSingletonFunction("g_effekseer","getPhase",&EffekseerSystem::getPhase,&g_effekseer);
-    g_lua.bindSingletonFunction("g_effekseer","clearAll",&EffekseerSystem::clearAll,&g_effekseer);
-    g_lua.bindSingletonFunction("g_effekseer","getStatus",&EffekseerSystem::getStatus,&g_effekseer);
-    g_lua.bindSingletonFunction("g_effekseer","getActiveCount",&EffekseerSystem::getActiveCount,&g_effekseer);
-    g_lua.bindSingletonFunction("g_effekseer","getParticleCount",&EffekseerSystem::getParticleCount,&g_effekseer);
-    g_lua.bindSingletonFunction("g_effekseer","getCachedAssetCount",&EffekseerSystem::getCachedAssetCount,&g_effekseer);
-    g_lua.bindSingletonFunction("g_effekseer","getDroppedCount",&EffekseerSystem::getDroppedCount,&g_effekseer);
-    g_lua.bindSingletonFunction("g_effekseer","getUpdateMilliseconds",&EffekseerSystem::getUpdateMilliseconds,&g_effekseer);
-    g_lua.bindSingletonFunction("g_effekseer","getRenderMilliseconds",&EffekseerSystem::getRenderMilliseconds,&g_effekseer);
-    g_lua.registerClass<UIEffekseerPreview,UIWidget>();
-    g_lua.bindClassStaticFunction<UIEffekseerPreview>("create",[]{return std::make_shared<UIEffekseerPreview>();});
-    g_lua.bindClassMemberFunction<UIEffekseerPreview>("setEffectHandle",&UIEffekseerPreview::setEffectHandle);
-    g_lua.bindClassMemberFunction<UIEffekseerPreview>("drawSelf",&UIEffekseerPreview::drawSelf);
-#endif
     g_lua.registerSingletonClass("g_memLeak");
     g_lua.bindSingletonFunction("g_memLeak", "uiInit", &MemLeakManager::uiInit, &g_memLeak);
     g_lua.bindSingletonFunction("g_memLeak", "uiTerminate", &MemLeakManager::uiTerminate, &g_memLeak);
@@ -553,70 +520,7 @@ void Client::registerLuaFunctions()
     g_lua.bindClassMemberFunction<Container>("getSize", &Container::getSize);
     g_lua.bindClassMemberFunction<Container>("getFirstIndex", &Container::getFirstIndex);
 
-    g_lua.registerSingletonClass("g_attachedEffects");
-    g_lua.bindSingletonFunction("g_attachedEffects", "registerByThing", &AttachedEffectManager::registerByThing, &g_attachedEffects);
-    g_lua.bindSingletonFunction("g_attachedEffects", "registerByImage", &AttachedEffectManager::registerByImage, &g_attachedEffects);
-    g_lua.bindSingletonFunction("g_attachedEffects", "getById", &AttachedEffectManager::getById, &g_attachedEffects);
-    g_lua.bindSingletonFunction("g_attachedEffects", "remove", &AttachedEffectManager::remove, &g_attachedEffects);
-    g_lua.bindSingletonFunction("g_attachedEffects", "clear", &AttachedEffectManager::clear, &g_attachedEffects);
-    g_lua.registerClass<AttachedEffect>();
-    g_lua.bindClassStaticFunction<AttachedEffect>("create", &AttachedEffect::create);
-    g_lua.bindClassMemberFunction<AttachedEffect>("getId", &AttachedEffect::getId);
-    g_lua.bindClassMemberFunction<AttachedEffect>("getThingId", &AttachedEffect::getThingId);
-    g_lua.bindClassMemberFunction<AttachedEffect>("getThingCategory", &AttachedEffect::getThingCategory);
-    g_lua.bindClassMemberFunction<AttachedEffect>("getName", &AttachedEffect::getName);
-    g_lua.bindClassMemberFunction<AttachedEffect>("setName", &AttachedEffect::setName);
-    g_lua.bindClassMemberFunction<AttachedEffect>("clone", &AttachedEffect::clone);
-    g_lua.bindClassMemberFunction<AttachedEffect>("getSpeed", &AttachedEffect::getSpeed);
-    g_lua.bindClassMemberFunction<AttachedEffect>("setSpeed", &AttachedEffect::setSpeed);
-    g_lua.bindClassMemberFunction<AttachedEffect>("getOpacity", &AttachedEffect::getOpacity);
-    g_lua.bindClassMemberFunction<AttachedEffect>("setOpacity", &AttachedEffect::setOpacity);
-    g_lua.bindClassMemberFunction<AttachedEffect>("getSize", &AttachedEffect::getSize);
-    g_lua.bindClassMemberFunction<AttachedEffect>("setSize", &AttachedEffect::setSize);
-    g_lua.bindClassMemberFunction<AttachedEffect>("isHidedOwner", &AttachedEffect::isHidedOwner);
-    g_lua.bindClassMemberFunction<AttachedEffect>("setHideOwner", &AttachedEffect::setHideOwner);
-    g_lua.bindClassMemberFunction<AttachedEffect>("isTransform", &AttachedEffect::isTransform);
-    g_lua.bindClassMemberFunction<AttachedEffect>("setTransform", &AttachedEffect::setTransform);
-    g_lua.bindClassMemberFunction<AttachedEffect>("isDisabledWalkAnimation", &AttachedEffect::isDisabledWalkAnimation);
-    g_lua.bindClassMemberFunction<AttachedEffect>("setDisableWalkAnimation", &AttachedEffect::setDisableWalkAnimation);
-    g_lua.bindClassMemberFunction<AttachedEffect>("isPermanent", &AttachedEffect::isPermanent);
-    g_lua.bindClassMemberFunction<AttachedEffect>("setPermanent", &AttachedEffect::setPermanent);
-    g_lua.bindClassMemberFunction<AttachedEffect>("isFollowingOwner", &AttachedEffect::isFollowingOwner);
-    g_lua.bindClassMemberFunction<AttachedEffect>("setFollowOwner", &AttachedEffect::setFollowOwner);
-    g_lua.bindClassMemberFunction<AttachedEffect>("getDuration", &AttachedEffect::getDuration);
-    g_lua.bindClassMemberFunction<AttachedEffect>("setDuration", &AttachedEffect::setDuration);
-    g_lua.bindClassMemberFunction<AttachedEffect>("getLoop", &AttachedEffect::getLoop);
-    g_lua.bindClassMemberFunction<AttachedEffect>("setLoop", &AttachedEffect::setLoop);
-    g_lua.bindClassMemberFunction<AttachedEffect>("getDirection", &AttachedEffect::getDirection);
-    g_lua.bindClassMemberFunction<AttachedEffect>("setDirection", &AttachedEffect::setDirection);
-    g_lua.bindClassMemberFunction<AttachedEffect>("move", &AttachedEffect::move);
-    g_lua.bindClassMemberFunction<AttachedEffect>("setBounce", &AttachedEffect::setBounce);
-    g_lua.bindClassMemberFunction<AttachedEffect>("setPulse", &AttachedEffect::setPulse);
-    g_lua.bindClassMemberFunction<AttachedEffect>("setFade", &AttachedEffect::setFade);
-    g_lua.bindClassMemberFunction<AttachedEffect>("setOnTop", &AttachedEffect::setOnTop);
-    g_lua.bindClassMemberFunction<AttachedEffect>("setOffset", &AttachedEffect::setOffset);
-    g_lua.bindClassMemberFunction<AttachedEffect>("setOnTopByDir", &AttachedEffect::setOnTopByDir);
-    g_lua.bindClassMemberFunction<AttachedEffect>("setDirOffset", &AttachedEffect::setDirOffset);
-    g_lua.bindClassMemberFunction<AttachedEffect>("setShader", &AttachedEffect::setShader);
-    g_lua.bindClassMemberFunction<AttachedEffect>("setCanDrawOnUI", &AttachedEffect::setCanDrawOnUI);
-    g_lua.bindClassMemberFunction<AttachedEffect>("canDrawOnUI", &AttachedEffect::canDrawOnUI);
-    g_lua.bindClassMemberFunction<AttachedEffect>("attachEffect", &AttachedEffect::attachEffect);
-    g_lua.bindClassMemberFunction<AttachedEffect>("setLight", &AttachedEffect::setLight);
-    g_lua.bindClassMemberFunction<AttachedEffect>("getLight", &AttachedEffect::getLight);
-    g_lua.bindClassMemberFunction<AttachedEffect>("getDrawOrder", &AttachedEffect::getDrawOrder);
-    g_lua.bindClassMemberFunction<AttachedEffect>("setDrawOrder", &AttachedEffect::setDrawOrder);
-    g_lua.registerClass<AttachableObject>();
-    g_lua.bindClassMemberFunction<AttachableObject>("attachEffect", &AttachableObject::attachEffect);
-    g_lua.bindClassMemberFunction<AttachableObject>("detachEffect", &AttachableObject::detachEffect);
-    g_lua.bindClassMemberFunction<AttachableObject>("detachEffectById", &AttachableObject::detachEffectById);
-    g_lua.bindClassMemberFunction<AttachableObject>("clearAttachedEffects", &AttachableObject::clearAttachedEffects);
-    g_lua.bindClassMemberFunction<AttachableObject>("clearTemporaryAttachedEffects", &AttachableObject::clearTemporaryAttachedEffects);
-    g_lua.bindClassMemberFunction<AttachableObject>("clearPermanentAttachedEffects", &AttachableObject::clearPermanentAttachedEffects);
-    g_lua.bindClassMemberFunction<AttachableObject>("getAttachedEffectById", &AttachableObject::getAttachedEffectById);
-    g_lua.bindClassMemberFunction<AttachableObject>("getAttachedEffects", &AttachableObject::getAttachedEffects);
-    g_lua.bindClassMemberFunction<AttachableObject>("hasAttachedEffects", &AttachableObject::hasAttachedEffects);
-    g_lua.bindClassMemberFunction<AttachableObject>("isOwnerHidden", &AttachableObject::isOwnerHidden);
-    g_lua.registerClass<Thing, AttachableObject>();
+    g_lua.registerClass<Thing>();
     g_lua.bindClassMemberFunction<Thing>("setId", &Thing::setId);
     g_lua.bindClassMemberFunction<Thing>("setPosition", &Thing::setPosition);
     g_lua.bindClassMemberFunction<Thing>("getId", &Thing::getId);
@@ -1098,7 +1002,7 @@ void Client::registerLuaFunctions()
     g_lua.bindClassMemberFunction<LocalPlayer>("isInMarket", &LocalPlayer::isInMarket);
     g_lua.bindClassMemberFunction<LocalPlayer>("setInMarket", &LocalPlayer::setInMarket);
 
-    g_lua.registerClass<Tile, AttachableObject>();
+    g_lua.registerClass<Tile>();
     g_lua.bindClassMemberFunction<Tile>("clean", &Tile::clean);
     g_lua.bindClassMemberFunction<Tile>("addThing", &Tile::addThing);
     g_lua.bindClassMemberFunction<Tile>("getThing", &Tile::getThing);
@@ -1219,9 +1123,6 @@ void Client::registerLuaFunctions()
     g_lua.bindClassMemberFunction<UICreature>("isColoredMount", &UICreature::isColoredMount);
 
     g_lua.registerClass<UIMap, UIWidget>();
-#ifdef FW_EFFEKSEER
-    g_lua.bindClassMemberFunction<UIMap>("setEffekseerEnabled",&UIMap::setEffekseerEnabled);
-#endif
     g_lua.bindClassStaticFunction<UIMap>("create", []{ return std::make_shared<UIMap>(); });
     g_lua.bindClassMemberFunction<UIMap>("drawSelf", &UIMap::drawSelf);
     g_lua.bindClassMemberFunction<UIMap>("movePixels", &UIMap::movePixels);

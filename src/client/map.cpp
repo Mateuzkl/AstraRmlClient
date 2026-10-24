@@ -21,9 +21,6 @@
  */
 
 #include "map.h"
-#ifdef FW_EFFEKSEER
-#include "effekseersystem.h"
-#endif
 #include "game.h"
 #include "gameconfig.h"
 #include "localplayer.h"
@@ -109,26 +106,11 @@ void Map::requestVisibleTilesCacheUpdate() {
 
 void Map::clean()
 {
-#ifdef FW_EFFEKSEER
-    g_effekseer.clearAll();
-#endif
     g_minimap.clearSpriteCache(); // Never retain HD terrain across world/dat resets.
     cleanDynamicThings();
 
-    for (auto& tileBlocks : m_tileBlocks) {
-        // Lua may still hold a tile/item after the map releases it. Stop its
-        // attachments now rather than waiting for the final shared_ptr release.
-        for (const auto& block : tileBlocks) {
-            for (const auto& tile : block.second.getTiles()) {
-                if (!tile)
-                    continue;
-                tile->clearAttachedEffects(true);
-                for (const auto& thing : tile->getThings())
-                    thing->clearAttachedEffects(true);
-            }
-        }
+    for (auto& tileBlocks : m_tileBlocks)
         tileBlocks.clear();
-    }
 
     m_waypoints.clear();
 
@@ -142,7 +124,6 @@ void Map::cleanDynamicThings()
 {
     for(const auto& pair : m_knownCreatures) {
         const CreaturePtr& creature = pair.second;
-        creature->clearAttachedEffects(true);
         removeThing(creature);
     }
     m_knownCreatures.clear();

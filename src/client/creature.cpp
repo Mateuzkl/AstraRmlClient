@@ -32,7 +32,6 @@
 #include "lightview.h"
 #include "healthbars.h"
 #include "negativeoffset.h"
-#include "attachedeffect.h"
 
 #include <framework/graphics/graphics.h>
 #include <framework/core/eventdispatcher.h>
@@ -160,26 +159,12 @@ void Creature::draw(const Point& dest, bool animate, LightView* lightView)
     if (m_outfit.getCategory() != ThingCategoryCreature)
         animationOffset -= getDisplacement();
 
-    const auto drawDirection = m_walking ? m_walkDirection : m_direction;
-    const Point movingDest = dest - jumpOffset + animationOffset;
-    drawAttachedEffects(dest, movingDest, drawDirection, false, lightView);
     size_t drawQueueSize = g_drawQueue->size();
-    if (!isOwnerHidden()) {
-        if (const auto transform = getAttachedTransformation()) {
-            // Render a copy, never mutate the network outfit (including Kondra fields).
-            auto outfit = m_outfit;
-            outfit.setCategory(ThingCategoryCreature);
-            outfit.setId(transform->getThingId());
-            outfit.draw(movingDest, drawDirection, isAttachedWalkAnimationDisabled() ? 0 : m_walkAnimationPhase, true, lightView);
-        } else {
-            m_outfit.draw(movingDest, drawDirection, isAttachedWalkAnimationDisabled() ? 0 : m_walkAnimationPhase, true, lightView);
-        }
-    }
+    m_outfit.draw(dest - jumpOffset + animationOffset, m_walking ? m_walkDirection : m_direction, m_walkAnimationPhase, true, lightView);
     if (m_marked) {
         g_drawQueue->setMark(drawQueueSize, updatedMarkedColor());
     }
 
-    drawAttachedEffects(dest, movingDest, drawDirection, true, lightView);
     drawTopWidgets(creatureCenter, m_walking ? m_walkDirection : m_direction);
 
     Light light = rawGetThingType()->getLight();
@@ -202,22 +187,7 @@ void Creature::drawOutfit(const Rect& destRect, Otc::Direction direction, const 
     if (direction == Otc::InvalidDirection)
         direction = m_direction;
 
-    if (!hasAttachedEffects() || mountOnly) {
-        m_outfit.draw(destRect, direction, 0, animate, ui, oldScaling, mountOnly, ignoreDisplacement);
-        return;
-    }
-    const size_t begin = g_drawQueue->size();
-    drawAttachedEffects(Point(), Point(), direction, false, nullptr, true, animate);
-    if (!isAttachedOwnerHidden(true)) {
-        auto outfit = m_outfit;
-        if (const auto transform = getAttachedTransformation(true)) {
-            outfit.setCategory(ThingCategoryCreature);
-            outfit.setId(transform->getThingId());
-        }
-        outfit.draw(Point(), direction, 0, animate, nullptr, ui, false, ignoreDisplacement);
-    }
-    drawAttachedEffects(Point(), Point(), direction, true, nullptr, true, animate);
-    g_drawQueue->correctOutfit(destRect, static_cast<int>(begin), oldScaling, m_outfit.getCenter());
+    m_outfit.draw(destRect, direction, 0, animate, ui, oldScaling, mountOnly, ignoreDisplacement);
 }
 
 void Creature::drawInformation(const Point& point, bool useGray, const Rect& parentRect, int drawFlags)
@@ -580,7 +550,6 @@ void Creature::onDisappear()
         self->m_showShieldTexture = true;
         self->cancelShieldBlinkEvent();
         self->cancelTimedEvents();
-        self->clearAttachedEffects();
 
         // invalidate this creature position
         if (!self->isLocalPlayer())

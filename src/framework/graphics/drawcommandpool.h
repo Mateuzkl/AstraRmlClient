@@ -46,15 +46,6 @@ public:
         m_commands.push_back(std::move(owner));
     }
 
-    // Replacing a pooled primitive must run its destructor without deleting
-    // arena storage; the custom command that replaces it owns heap storage.
-    void replace(size_t index, std::unique_ptr<Base> command)
-    {
-        if (!command) return;
-        Owner owner(command.release(), [](Base* p) { delete p; });
-        m_commands.at(index) = std::move(owner);
-    }
-
     auto& operator[](size_t index) { return m_commands[index]; }
     const auto& operator[](size_t index) const { return m_commands[index]; }
     auto begin() { return m_commands.begin(); }

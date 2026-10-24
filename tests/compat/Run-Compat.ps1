@@ -1,12 +1,17 @@
-param([string]$BinaryPath)
+param(
+  [string]$BinaryPath,
+  [ValidateSet('compat','toolbar','rml')][string]$Suite = 'compat'
+)
 $ErrorActionPreference = 'Stop'
 $clientRoot = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
 if (-not $BinaryPath) { $BinaryPath = Join-Path $clientRoot 'otclient_dx_x64.exe' }
 $binary = (Resolve-Path -LiteralPath $BinaryPath).Path
 $testDirectory = Join-Path ([IO.Path]::GetTempPath()) ('astra-rml-compat-' + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $testDirectory | Out-Null
-Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'bootstrap.lua') -Destination (Join-Path $testDirectory 'init.lua')
-Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'compat_test.lua') -Destination (Join-Path $testDirectory 'test.lua')
+$bootstrap = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'bootstrap.lua') -Raw
+$bootstrap = $bootstrap.Replace('APP_NAME = "astra_rml_compat_test"', ('APP_NAME = "astra_rml_compat_test_' + $Suite + '"'))
+[IO.File]::WriteAllText((Join-Path $testDirectory 'init.lua'), $bootstrap, [Text.UTF8Encoding]::new($false))
+Copy-Item -LiteralPath (Join-Path $PSScriptRoot ($Suite + '_test.lua')) -Destination (Join-Path $testDirectory 'test.lua')
 Copy-Item -LiteralPath (Join-Path $clientRoot 'init.lua') -Destination (Join-Path $testDirectory 'production-init.lua')
 if (Test-Path -LiteralPath (Join-Path $clientRoot 'packet.log')) {
   Copy-Item -LiteralPath (Join-Path $clientRoot 'packet.log') -Destination (Join-Path $testDirectory 'captured-packet.log')
@@ -25,7 +30,8 @@ $process.Refresh()
 $result = Get-Content -LiteralPath $stdout -Raw
 Write-Output $result
 Write-Output "Compatibility test artifacts: $testDirectory"
-if ($process.ExitCode -ne 0 -or $result -notmatch 'ASTRA_RML_COMPAT_PASS:') {
+$successMarker = @{compat='ASTRA_RML_COMPAT_PASS:';toolbar='ASTRA_TOOLBAR_PASS:';rml='ASTRA_RML_SCREENS_PASS:'}[$Suite]
+if ($process.ExitCode -ne 0 -or $result -notmatch $successMarker) {
   Get-Content -LiteralPath $stderr
   throw "Compatibility test failed ($($process.ExitCode)). Logs: $testDirectory"
 }
