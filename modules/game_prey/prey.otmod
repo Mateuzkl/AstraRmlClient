@@ -1,10 +1,10 @@
 Module
   name: game_prey
-  description: Preys, sponsored by kivera-global.com
-  author: otclient.ovh & kivera-global.com
-  website: http://otclient.ovh
+  description: Preys, sponsored by kivera-global.com, remade by Vithrax#5814
+  author: Mateuzkl
+  website: https://github.com/Mateuzkl/AstraClient
   sandboxed: true
-  scripts: [ prey ]
-  dependencies: [ client_topmenu ]
+  scripts: [ compat, prey ]
+  dependencies: [ client_topmenu, client_styles ]
   @onLoad: init()
   @onUnload: terminate()

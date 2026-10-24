@@ -14,6 +14,7 @@ local function input(writer)
 end
 
 local function run()
+  check(g_resources.getWriteDir():find('astra_rml_compat_test', 1, true), 'Native startup uses the isolated test profile')
   g_modules.ensureModuleLoaded('game_features')
   g_modules.ensureModuleLoaded('game_things')
   g_game.setProtocolVersion(860)
@@ -138,8 +139,11 @@ local function run()
 
   local storeTest = assert(loadstring(g_resources.readFileContents('/tests/compat/store_test.lua'), '@store_test.lua'))()
   storeTest(check, input)
-  print('ASTRA_RML_COMPAT_PASS: ' .. checks .. ' checks; startup, HTTP, login, features, DAT/SPR, RmlUi, walk and Store guard')
-  g_app.exit()
+  local preyTest = assert(loadstring(g_resources.readFileContents('/tests/compat/prey_test.lua'), '@prey_test.lua'))()
+  preyTest(check, input, function()
+    print('ASTRA_RML_COMPAT_PASS: ' .. checks .. ' checks; startup, HTTP, login, features, DAT/SPR, RmlUi, walk, Store and Astra Prey')
+    g_app.exit()
+  end)
 end
 
 -- Let deferred option setup and UI callbacks run before asserting success.

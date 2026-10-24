@@ -33,6 +33,12 @@ git lfs pull
 
 `modules/game_bot` está mantido. Os módulos antigos `cavebot_mod`, `scriptsManager-mod` e `game_maptracker` foram removidos das pastas carregadas.
 
+## Prey do Astra
+
+`modules/game_prey` contém a janela completa do AstraClient: seleção entre nove criaturas, busca por criatura, bônus, duração, custos, desbloqueio permanente e Prey Tracker. Abra pelos botões **Prey Dialog** e **Prey Tracker** durante o jogo.
+
+O módulo usa as mensagens nativas do TFS original (`0xE8`/`0xE9` para estado/preços, além dos recursos e atualizações de duração). As imagens, fontes e estilos próprios estão dentro do módulo para preservar o visual das outras janelas. A integração com a loja usa o adaptador Astra já instalado neste cliente.
+
 ## Projeto e validação
 
 O projeto Visual Studio fica em `vc23/otclient.sln`. `vcpkg.json` e os scripts `cmake/` fornecem as dependências usadas pelos targets RmlUi/Effekseer. A compilação fica a cargo do responsável pelo projeto; o executável incluído já existia na pasta.
@@ -43,6 +49,6 @@ Para executar as verificações locais com esse executável, sem login real:
 powershell -ExecutionPolicy Bypass -File .\tests\compat\Run-Compat.ps1
 ```
 
-O teste usa um perfil separado e verifica inicialização, fontes/runtime RmlUi, DAT/SPR, HTTP, pacotes de login, features, encaminhamento das teclas e ausência dos módulos removidos. A movimentação real deve ser validada em jogo.
+O teste declara o nome do perfil antes da inicialização nativa e verifica inicialização, fontes/runtime RmlUi, DAT/SPR, HTTP, pacotes de login, features, encaminhamento das teclas, loja, estados/controles do Prey e ausência dos módulos removidos. A movimentação real e as operações do Prey devem ser validadas em jogo.
 
 Backups locais em `.codex-backups/`, logs, configurações pessoais e resultados de compilação não são versionados.
