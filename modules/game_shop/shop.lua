@@ -38,6 +38,7 @@ end
 
 -- public functions
 function init()
+  AstraStoreProtocol.init()
   connect(g_game, {
     onGameStart = check, 
     onGameEnd = hide,
@@ -60,6 +61,7 @@ function init()
 end
 
 function terminate()
+  AstraStoreProtocol.terminate()
   disconnect(g_game, {
     onGameStart = check, 
     onGameEnd = hide,
@@ -104,9 +106,7 @@ function show()
   if not shop or not shopButton then
     return
   end
-  if g_game.getFeature(GameIngameStore) or g_game.getFeature(GameIngameStoreHighlights) then
-    g_game.openStore(0)
-  end
+  AstraStoreProtocol.open()
   
   shop:show()
   shop:raise()
@@ -295,7 +295,7 @@ function transferCoins()
   amount = transferWindow.coinsAmount:getValue()
   local recipient = transferWindow.recipient:getText()
 
-  g_game.transferCoins(recipient, amount)
+  AstraStoreProtocol.transfer(recipient, amount)
   transferWindow.recipient:setText('')
   transferWindow.coinsAmount:setValue(0)
 end
@@ -484,10 +484,10 @@ function showHistory(force)
     return
   end
 
-  if g_game.getFeature(GameIngameStore) and not otcv8shop then
-    g_game.openTransactionHistory(100)
+  if not force then
+    AstraStoreProtocol.history()
+    sendAction("history")
   end
-  sendAction("history")
 
   browsingHistory = true
   clearOffers()
@@ -543,7 +543,7 @@ function changeCategory(widget, newCategory)
     return
   end
   
-  if g_game.getFeature(GameIngameStore) and widget ~= newCategory and not otcv8shop then
+  if USE_OTCV8_JSON_SHOP and g_game.getFeature(GameIngameStore) and widget ~= newCategory and not otcv8shop then
     local serviceType = 0
     if g_game.getFeature(GameTibia12Protocol) then
       serviceType = 2
@@ -574,7 +574,7 @@ function buyOffer(widget)
     return
   end
   
-  selectedOffer = {category=category, offer=offer, title=item.title, cost=item.cost, id=widget.offerId}
+  selectedOffer = {category=category, offer=offer, title=item.title, cost=item.cost, id=widget.offerId, storeSubtype=item.storeSubtype}
   
   scheduleEvent(function()
       if msgWindow then
@@ -597,6 +597,17 @@ end
 function buyConfirmed()
   msgWindow:destroy()
   msgWindow = nil
+  if selectedOffer.id and not USE_OTCV8_JSON_SHOP then
+    if selectedOffer.storeSubtype == 'changename' or selectedOffer.storeSubtype == 'hireling' then
+      local offerId = selectedOffer.id
+      modules.client_textedit.singlelineEditor('', function(name)
+        if name ~= '' then AstraStoreProtocol.buy(offerId, name, 1) end
+      end)
+    else
+      AstraStoreProtocol.buy(selectedOffer.id)
+    end
+    return
+  end
   sendAction("buy", selectedOffer)
   if g_game.getFeature(GameIngameStore) and selectedOffer.id and not otcv8shop then
     local offerName = selectedOffer.title:lower()

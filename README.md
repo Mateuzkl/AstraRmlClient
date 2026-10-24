@@ -25,6 +25,8 @@ git lfs pull
 - Login entende a assinatura Astra, a lista de personagens e as capabilities negociadas.
 - A SRC controla a pré-caminhada; o Lua limpa as filas ao soltar teclas, cancelar ou teleportar.
 - A loja antiga não envia automaticamente o opcode JSON 201 para esse TFS.
+- A loja usa o protocolo binário Astra: `0xFD` para respostas e catálogo, histórico, compras e transferências nos opcodes próprios do TFS.
+- Estatísticas só são enviadas se `Services.stats` tiver um endpoint configurado; não há envio fixo para o domínio do OTCv8.
 - A aba opcional `custom.otui` só é carregada quando o arquivo existe.
 - Nesta SRC, os projéteis compartilham a opacidade dos efeitos; o controle independente fica desabilitado.
 - Fontes LatoLatin do pacote RmlUi ficam em `data/fonts/rml`, junto da licença.

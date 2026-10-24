@@ -8,6 +8,9 @@ New-Item -ItemType Directory -Path $testDirectory | Out-Null
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'bootstrap.lua') -Destination (Join-Path $testDirectory 'init.lua')
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'compat_test.lua') -Destination (Join-Path $testDirectory 'test.lua')
 Copy-Item -LiteralPath (Join-Path $clientRoot 'init.lua') -Destination (Join-Path $testDirectory 'production-init.lua')
+if (Test-Path -LiteralPath (Join-Path $clientRoot 'packet.log')) {
+  Copy-Item -LiteralPath (Join-Path $clientRoot 'packet.log') -Destination (Join-Path $testDirectory 'captured-packet.log')
+}
 foreach ($resourceName in @('data','modules','mods','layouts','tests')) {
   New-Item -ItemType Junction -Path (Join-Path $testDirectory $resourceName) -Target (Join-Path $clientRoot $resourceName) | Out-Null
 }

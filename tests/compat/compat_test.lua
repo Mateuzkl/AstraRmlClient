@@ -55,6 +55,20 @@ local function run()
   end}
   HTTP.onGet(90003, '', '', '{"legacy":true}')
 
+  local originalPost, statsUrl = HTTP.postJSON, Services.stats
+  local statsSent = 0
+  HTTP.postJSON = function(url, data)
+    check(url == 'http://127.0.0.1:1/stats' and type(data) == 'table', 'Stats use the compatible HTTP JSON wrapper')
+    statsSent = statsSent + 1
+  end
+  Services.stats = ''
+  modules.client_stats.sendStats()
+  check(statsSent == 0, 'Disabled statistics send nothing to the old OTCv8 endpoint')
+  Services.stats = 'http://127.0.0.1:1/stats'
+  modules.client_stats.sendStats()
+  check(statsSent == 1, 'Statistics only use the explicitly configured endpoint')
+  HTTP.postJSON, Services.stats = originalPost, statsUrl
+
   -- Use real native message readers for Astra capabilities and character data.
   local login = ProtocolLogin.create()
   login:parseAstraCapabilities(input(function(msg) msg:addU8(1); msg:addU8(1) end))
@@ -122,6 +136,8 @@ local function run()
   g_game.cancelWalkQueue, g_game.turn, g_keyboard.getModifiers = original.cancel, original.turn, original.modifiers
   g_game.isOnline, g_game.getProtocolGame = original.online, original.protocol
 
+  local storeTest = assert(loadstring(g_resources.readFileContents('/tests/compat/store_test.lua'), '@store_test.lua'))()
+  storeTest(check, input)
   print('ASTRA_RML_COMPAT_PASS: ' .. checks .. ' checks; startup, HTTP, login, features, DAT/SPR, RmlUi, walk and Store guard')
   g_app.exit()
 end
