@@ -1,7 +1,7 @@
 param(
     [Parameter(Mandatory)][string]$Binary,
     [string]$TempRoot = [IO.Path]::GetTempPath(),
-    [ValidateSet('core', 'skilltree', 'otui')][string]$Scenario = 'core',
+    [ValidateSet('core', 'skilltree', 'otui', 'options')][string]$Scenario = 'core',
     [ValidateSet('', '-warp', '-dx11', '-dx9', '-opengl')][string]$GraphicsBackend = '',
     [string]$GraphicsRuntimeDir
 )
@@ -20,6 +20,18 @@ Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'bootstrap.lua') -Destination (J
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'test.lua'), (Join-Path $PSScriptRoot 'smoke.rml') -Destination $fixture
 if ($Scenario -eq 'otui') {
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'otui.lua') -Destination (Join-Path $fixture 'test.lua')
+}
+if ($Scenario -eq 'options') {
+    "TEST_RUN_ID = '$([IO.Path]::GetFileName($fixture))'" | Set-Content -LiteralPath (Join-Path $fixture 'test-run.lua') -Encoding utf8
+    Copy-Item -LiteralPath (Join-Path $repo 'modules\client_options') -Destination (Join-Path $fixture 'modules') -Recurse
+    New-Item -ItemType Directory -Path (Join-Path $fixture 'modules\gamelib'), (Join-Path $fixture 'layouts\retro\images') -Force | Out-Null
+    Copy-Item -LiteralPath (Join-Path $repo 'modules\gamelib\const.lua') -Destination (Join-Path $fixture 'modules\gamelib')
+    Copy-Item -LiteralPath (Join-Path $repo 'layouts\retro\images\ui') -Destination (Join-Path $fixture 'layouts\retro\images') -Recurse
+    Copy-Item -LiteralPath (Join-Path $repo 'data\images\optionstab') -Destination (Join-Path $fixture 'data\images') -Recurse
+    Copy-Item -LiteralPath (Join-Path $repo 'data\images\crosshair') -Destination (Join-Path $fixture 'data\images') -Recurse
+    Copy-Item -LiteralPath (Join-Path $repo 'data\images\topbuttons') -Destination (Join-Path $fixture 'data\images') -Recurse
+    Copy-Item -LiteralPath (Join-Path $repo 'data\images\ui\scrollbar.png') -Destination (Join-Path $fixture 'data\images\ui')
+    Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'options.lua') -Destination (Join-Path $fixture 'test.lua')
 }
 if ($Scenario -eq 'skilltree') {
     Copy-Item -LiteralPath (Join-Path $repo 'modules\game_rmlskilltree') -Destination (Join-Path $fixture 'modules') -Recurse
