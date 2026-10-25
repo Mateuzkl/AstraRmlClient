@@ -1,0 +1,29 @@
+<rml>
+<head>
+  <title>Options</title>
+  <link type="text/rcss" href="options.rcss"/>
+</head>
+<body data-model="clientOptions">
+  <div class="options-window">
+    <header data-drag="window"><span>{{title}}</span><button id="close-options" data-drag="none" data-event-click="Close()">x</button></header>
+    <div class="options-body">
+      <nav id="options-tabs"></nav>
+      <main>
+        <h1 id="section-title"></h1>
+        <div id="options-content"></div>
+        <footer><button id="accept-options" class="classic-button" data-event-click="Close()">{{ok}}</button></footer>
+      </main>
+    </div>
+    <div id="language-dialog" class="modal-shade" hidden>
+      <div class="language-window">
+        <h2>{{language}}</h2>
+        <select id="language-select"></select>
+        <div class="dialog-actions">
+          <button id="language-cancel" class="classic-button">{{cancel}}</button>
+          <button id="language-apply" class="classic-button">{{apply}}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</rml>

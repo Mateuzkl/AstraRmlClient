@@ -72,19 +72,11 @@ local defaultOptions = {
   missileOpacity = 100
 }
 
-local optionsWindow
 local optionsButton
-local optionsTabBar
 local options = {}
 local extraOptions = {}
-local generalPanel
-local interfacePanel
-local consolePanel
-local graphicsPanel
-local audioPanel
-local customPanel
-local extrasPanel
 local audioButton
+local setupEvent
 
 function init()
   for k,v in pairs(defaultOptions) do
@@ -92,52 +84,11 @@ function init()
     options[k] = v
   end
   for _, v in ipairs(g_extras.getAll()) do
-	  extraOptions[v] = g_extras.get(v)
+    extraOptions[v] = g_extras.get(v)
     g_settings.setDefault("extras_" .. v, extraOptions[v])
   end
-
-  optionsWindow = g_ui.displayUI('options')
-  optionsWindow:hide()
-
-  optionsTabBar = optionsWindow:getChildById('optionsTabBar')
-  optionsTabBar:setContentWidget(optionsWindow:getChildById('optionsTabContent'))
-
   g_keyboard.bindKeyDown('Ctrl+Shift+F', function() toggleOption('fullscreen') end)
   g_keyboard.bindKeyDown('Ctrl+N', toggleDisplays)
-
-  generalPanel = g_ui.loadUI('game')
-  optionsTabBar:addTab(tr('Game'), generalPanel, '/images/optionstab/game')
-  
-  interfacePanel = g_ui.loadUI('interface')
-  optionsTabBar:addTab(tr('Interface'), interfacePanel, '/images/optionstab/game')  
-
-  consolePanel = g_ui.loadUI('console')
-  optionsTabBar:addTab(tr('Console'), consolePanel, '/images/optionstab/console')
-
-  graphicsPanel = g_ui.loadUI('graphics')
-  optionsTabBar:addTab(tr('Graphics'), graphicsPanel, '/images/optionstab/graphics')
-
-  audioPanel = g_ui.loadUI('audio')
-  optionsTabBar:addTab(tr('Audio'), audioPanel, '/images/optionstab/audio')
-
-
-  extrasPanel = g_ui.createWidget('OptionPanel')
-  for _, v in ipairs(g_extras.getAll()) do
-    local extrasButton = g_ui.createWidget('OptionCheckBox')
-    extrasButton:setId(v)
-    extrasButton:setText(g_extras.getDescription(v))
-    extrasPanel:addChild(extrasButton)
-  end
-  if not g_game.getFeature(GameNoDebug) and not g_app.isMobile() then
-    optionsTabBar:addTab(tr('Extras'), extrasPanel, '/images/optionstab/extras')
-  end
-
-  if not g_app.isMobile() then
-    if g_resources.fileExists('/modules/client_options/custom.otui') then
-      customPanel = g_ui.loadUI('custom')
-      optionsTabBar:addTab(tr('Custom'), customPanel, '/images/optionstab/features')
-    end
-  end
 
   optionsButton = modules.client_topmenu.addLeftButton('optionsButton', tr('Options'), '/images/topbuttons/options', toggle)
   audioButton = modules.client_topmenu.addLeftButton('audioButton', tr('Audio'), '/images/topbuttons/audio', function() toggleOption('enableAudio') end)
@@ -145,7 +96,7 @@ function init()
     audioButton:hide()
   end
   
-  addEvent(function() setup() end)
+  setupEvent = addEvent(function() setupEvent=nil setup() end)
   
   connect(g_game, { onGameStart = online,
                      onGameEnd = offline })                    
@@ -157,7 +108,8 @@ function terminate()
 
   g_keyboard.unbindKeyDown('Ctrl+Shift+F')
   g_keyboard.unbindKeyDown('Ctrl+N')
-  optionsWindow:destroy()
+  if setupEvent then removeEvent(setupEvent) setupEvent=nil end
+  OptionsView.destroy()
   optionsButton:destroy()
   audioButton:destroy()
 end
@@ -176,10 +128,6 @@ function setup()
   
   for _, v in ipairs(g_extras.getAll()) do
     g_extras.set(v, g_settings.getBoolean("extras_" .. v))
-    local widget = extrasPanel:recursiveGetChildById(v)
-    if widget then
-      widget:setChecked(g_extras.get(v))
-    end
   end  
   
   if g_game.isOnline() then
@@ -188,7 +136,7 @@ function setup()
 end
 
 function toggle()
-  if optionsWindow:isVisible() then
+  if OptionsView.isVisible() then
     hide()
   else
     show()
@@ -196,13 +144,13 @@ function toggle()
 end
 
 function show()
-  optionsWindow:show()
-  optionsWindow:raise()
-  optionsWindow:focus()
+  if not OptionsView.show() then
+    g_logger.warning('Options requires a client build with RmlUi support.')
+  end
 end
 
 function hide()
-  optionsWindow:hide()
+  OptionsView.close()
 end
 
 function toggleDisplays()
@@ -229,6 +177,7 @@ function setOption(key, value, force)
   if extraOptions[key] ~= nil then
     g_extras.set(key, value)
     g_settings.set("extras_" .. key, value)
+    OptionsView.sync(key)
     if key == "debugProxy" and modules.game_proxy then
       if value then
         modules.game_proxy.show()
@@ -277,29 +226,23 @@ function setOption(key, value, force)
     if g_sounds ~= nil then
       g_sounds.getChannel(SoundChannels.Music):setGain(value/100)
     end
-    audioPanel:getChildById('musicSoundVolumeLabel'):setText(tr('Music volume: %d', value))
   elseif key == 'botSoundVolume' then
     if g_sounds ~= nil then
       g_sounds.getChannel(SoundChannels.Bot):setGain(value/100)
     end
-    audioPanel:getChildById('botSoundVolumeLabel'):setText(tr('Bot sound volume: %d', value))    
   elseif key == 'showHealthManaCircle' then
     modules.game_healthinfo.healthCircle:setVisible(value)
     modules.game_healthinfo.healthCircleFront:setVisible(value)
     modules.game_healthinfo.manaCircle:setVisible(value)
     modules.game_healthinfo.manaCircleFront:setVisible(value)
   elseif key == 'backgroundFrameRate' then
-    local text, v = value, value
-    if value <= 0 or value >= 201 then text = 'max' v = 0 end
-    graphicsPanel:getChildById('backgroundFrameRateLabel'):setText(tr('Game framerate limit: %s', text))
+    local v = value
+    if value <= 0 or value >= 201 then v = 0 end
     g_app.setMaxFps(v)
   elseif key == 'enableLights' then
     gameMapPanel:setDrawLights(value and options['ambientLight'] < 100)
-    graphicsPanel:getChildById('ambientLight'):setEnabled(value)
-    graphicsPanel:getChildById('ambientLightLabel'):setEnabled(value)
   elseif key == 'floorFading' then
     gameMapPanel:setFloorFading(value)
-    interfacePanel:getChildById('floorFadingLabel'):setText(tr('Floor fading: %s ms', value))
   elseif key == 'crosshair' then
     if value == 1 then
       gameMapPanel:setCrosshair("")    
@@ -309,7 +252,6 @@ function setOption(key, value, force)
       gameMapPanel:setCrosshair("/images/crosshair/full.png")    
     end
   elseif key == 'ambientLight' then
-    graphicsPanel:getChildById('ambientLightLabel'):setText(tr('Ambient light: %s%%', value))
     gameMapPanel:setMinimumAmbientLight(value/100)
     gameMapPanel:setDrawLights(options['enableLights'] and value < 100)
   elseif key == 'optimizationLevel' then
@@ -343,68 +285,17 @@ function setOption(key, value, force)
     if modules.game_console and modules.game_console.consoleToggleChat:isChecked() ~= value then
       modules.game_console.consoleToggleChat:setChecked(value)
     end
-  elseif key == 'hotkeyDelay' then
-    generalPanel:getChildById('hotkeyDelayLabel'):setText(tr('Hotkey delay: %s ms', value))  
-  elseif key == 'walkFirstStepDelay' then
-    generalPanel:getChildById('walkFirstStepDelayLabel'):setText(tr('Walk delay after first step: %s ms', value))  
-  elseif key == 'walkTurnDelay' then
-    generalPanel:getChildById('walkTurnDelayLabel'):setText(tr('Walk delay after turn: %s ms', value))  
-  elseif key == 'walkStairsDelay' then
-    generalPanel:getChildById('walkStairsDelayLabel'):setText(tr('Walk delay after floor change: %s ms', value))  
-  elseif key == 'walkTeleportDelay' then
-    generalPanel:getChildById('walkTeleportDelayLabel'):setText(tr('Walk delay after teleport: %s ms', value))  
-  elseif key == 'walkCtrlTurnDelay' then
-    generalPanel:getChildById('walkCtrlTurnDelayLabel'):setText(tr('Walk delay after ctrl turn: %s ms', value))  
   elseif key == "antialiasing" then
     g_app.setSmooth(value)
   elseif key == 'effectOpacity' then
     if not g_app.isMobile() then
       g_client.setEffectAlpha(value / 100)
     end
-    local effectOpacityLabel = graphicsPanel:getChildById('effectOpacityLabel')
-    if effectOpacityLabel then
-      effectOpacityLabel:setText(tr('Effect opacity: %s%%', value))
-    end
-  elseif key == 'missileOpacity' then
-    -- This Astra SRC draws missiles with the same alpha as spell effects.
-    -- It has no independent setMissileAlpha binding.
-    local slider = graphicsPanel:getChildById('missileOpacity')
-    if slider then
-      slider:setEnabled(false)
-      slider:setTooltip(tr('Projectile opacity follows the Effect opacity option in this client.'))
-    end
-    local missileOpacityLabel = graphicsPanel:getChildById('missileOpacityLabel')
-    if missileOpacityLabel then
-      missileOpacityLabel:setText(tr('Missile opacity: shared with effects'))
-    end
-  end
-
-  -- change value for keybind updates
-  for _,panel in pairs(optionsTabBar:getTabsPanel()) do
-    local widget = panel:recursiveGetChildById(key)
-    if widget then
-      if widget:getStyle().__class == 'UICheckBox' then
-        widget:setChecked(value)
-      elseif widget:getStyle().__class == 'UIScrollBar' then
-        widget:setValue(value)
-      elseif widget:getStyle().__class == 'UIComboBox' then
-        if type(value) == "string" then
-          widget:setCurrentOption(value, true)
-          break
-        end
-        if value == nil or value < 1 then 
-          value = 1
-        end
-        if widget.currentIndex ~= value then
-          widget:setCurrentIndex(value, true)
-        end
-      end      
-      break
-    end
   end
   
   g_settings.set(key, value)
   options[key] = value
+  OptionsView.sync(key)
 
   if key == "profile" then
     if modules.client_profiles then
@@ -426,15 +317,8 @@ function setOption(key, value, force)
 end
 
 function getOption(key)
+  if extraOptions[key] ~= nil then return g_extras.get(key) end
   return options[key]
-end
-
-function addTab(name, panel, icon)
-  optionsTabBar:addTab(name, panel, icon)
-end
-
-function addButton(name, func, icon)
-  optionsTabBar:addButton(name, func, icon)
 end
 
 -- hide/show
@@ -450,14 +334,6 @@ function offline()
   setLightOptionsVisibility(true)
 end
 
--- classic view
-
--- graphics
 function setLightOptionsVisibility(value)
-  graphicsPanel:getChildById('enableLights'):setEnabled(value)
-  graphicsPanel:getChildById('ambientLightLabel'):setEnabled(value)
-  graphicsPanel:getChildById('ambientLight'):setEnabled(value)  
-  interfacePanel:getChildById('floorFading'):setEnabled(value)
-  interfacePanel:getChildById('floorFadingLabel'):setEnabled(value)
-  interfacePanel:getChildById('floorFadingLabel2'):setEnabled(value)  
+  OptionsView.setLightOptionsVisibility(value)
 end
